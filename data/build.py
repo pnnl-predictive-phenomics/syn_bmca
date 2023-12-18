@@ -52,7 +52,9 @@ def _load_metabolomics() -> pd.DataFrame:
 
 def _load_transcriptomics() -> pd.DataFrame:
     """Loads transcriptomic data."""
+    logging.info("Parsing Transcriptomics Data...")
     df = pd.read_excel(next(TRANS.glob("*.xlsx")), index_col=0)
+    logging.info("Loaded Transcriptomics Data")
     return df
 
 
@@ -68,7 +70,8 @@ def main():
     metabolomics = _load_metabolomics()
     transcriptomics = _load_transcriptomics()
 
-    return metabolomics, transcriptomics
+    metabolomics.to_csv(OUTPUT.joinpath("metabolomics.csv"))
+    transcriptomics.to_csv(OUTPUT.joinpath("transcriptomics.csv"))
 
 
 if __name__ == "__main__":

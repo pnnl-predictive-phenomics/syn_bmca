@@ -41,6 +41,27 @@ HTX97_RS00040                 226            136            180  ...          15
 HTX97_RS00005                 138            120            114  ...           72          144          122
 ```
 
+
+This data is collected from 2 experiments. 1. Mixed co-culture of S. elongatus and R. toruloides in mixed bioreactor, 2. S. elongatus axenic control in same volume mixed bioreactor. For running BMCA we are interested in keeping these 2 sets of data separated as the 2-member metabolic model differs from the 1-member axenic model. The data for the co-culture mixed bioreactor begins with `Se_Rt_CC_*` while the axenic mixed bioreactor begins with `Se_ax_*`.
+
+There are 3 samples each for the 2-member and axenic experiments: `Se_Rt_CC_90_1` for example is sample 1 for the 2-member mixed bioreactor and `Se_ax_190_3` is sample 3 for the axenic mixed bioreactor. The measurements here are timed at 90, 140, and 190 hours so each sample has 3 distinct measurements: `Se_Rt_CC_90_1` is sample 1 of the 2-member mixed bioreactor  measured at 90 hours and `Se_ax_140_2` is sample 2 of the axenic  mixed bioreactor at 140 hours.
+
+As an example here is the breakdown of the 3 S. elongatus axenic control samples for hours 90,140, and 190:
+
+| Sample # | Sample Name   | Sample Time (hr) |
+|:--------:|:-------------:|:----------------:|
+| 1        | `Se_ax_90_1`  | 90               |
+| 2        | `Se_ax_90_2`  | 90               |
+| 3        | `Se_ax_90_3`  | 90               |
+| 1        | `Se_ax_140_1` | 140              |
+| 2        | `Se_ax_140_2` | 140              |
+| 3        | `Se_ax_140_3` | 140              |
+| 1        | `Se_ax_190_1` | 190              |
+| 2        | `Se_ax_190_2` | 190              |
+| 3        | `Se_ax_190_3` | 190              |
+
+
+
 ## Metabolomics
 
 The source metabolomics file can be found at `data/raw_data/Selon_omics_Pavlo/Metabolomics/Se_Rt_mixed_CC_EMSL_rem_PO4_HCO3_and_zer.csv` and `data/raw_data/Selon_omics_Pavlo/Metabolomics/Se_Rt_mixed_CC_JHU.csv`. These files contain the structure:
@@ -56,3 +77,43 @@ Sample                                                                ...
 119)LEU          298167         294771         237533         123703  ...        431127        561591        627749        459052
 120)ILE          558263         559182         476994         255027  ...        685940        788712        926085        739087
 ```
+
+This data is collected from 2 experiments. 1. Mixed co-culture of S. elongatus and R. toruloides in mixed bioreactor, 2. S. elongatus axenic control in same volume mixed bioreactor. For running BMCA we are interested in keeping these 2 sets of data separated as the 2-member metabolic model differs from the 1-member axenic model. The data for the co-culture mixed bioreactor begins with `Se_Rt_cc_*` while the axenic mixed bioreactor begins with `Se_axen_*`.
+
+There are 3 samples each for the 2-member and axenic experiments: `Se_Rt_cc_d1_1` for example is sample 1 for the 2-member mixed bioreactor and `Se_axen_d1_3` is sample 3 for the axenic mixed bioreactor. The measurements here are timed from 1 to 9 days so each sample has 9 distinct measurements: `Se_axen_d1_3` is sample 3 measured on Day 1 (24 hours) and `Se_axen_d8_3` is sample 3 on Day 8 (192 hours).
+
+As an example here is the breakdown of the 3 S. elongatus axenic control samples for days 1 through 9:
+
+| Sample # | Sample Name    | Sample Time (hr) | Sample Time (day) |
+|:--------:|:--------------:|:----------------:|:-----------------:|
+| 1        | `Se_axen_d1_1` | 24               | 1                 |
+| 2        | `Se_axen_d1_2` | 24               | 1                 |
+| 3        | `Se_axen_d1_3` | 24               | 1                 |
+| 1        | `Se_axen_d2_1` | 48               | 2                 |
+| 2        | `Se_axen_d2_2` | 48               | 2                 |
+| 3        | `Se_axen_d2_3` | 48               | 2                 |
+| 1        | `Se_axen_d3_1` | 72               | 3                 |
+| 2        | `Se_axen_d3_2` | 72               | 3                 |
+| 3        | `Se_axen_d3_3` | 72               | 3                 |
+| 1        | `Se_axen_d4_1` | 96               | 4                 |
+| 2        | `Se_axen_d4_2` | 96               | 4                 |
+| 3        | `Se_axen_d4_3` | 96               | 4                 |
+| 1        | `Se_axen_d5_1` | 120              | 5                 |
+| 2        | `Se_axen_d5_2` | 120              | 5                 |
+| 3        | `Se_axen_d5_3` | 120              | 5                 |
+| 1        | `Se_axen_d6_1` | 144              | 6                 |
+| 2        | `Se_axen_d6_2` | 144              | 6                 |
+| 3        | `Se_axen_d6_3` | 144              | 6                 |
+| 1        | `Se_axen_d7_1` | 168              | 7                 |
+| 2        | `Se_axen_d7_2` | 168              | 7                 |
+| 3        | `Se_axen_d7_3` | 168              | 7                 |
+| 1        | `Se_axen_d8_1` | 192              | 8                 |
+| 2        | `Se_axen_d8_2` | 192              | 8                 |
+| 3        | `Se_axen_d8_3` | 192              | 8                 |
+| 1        | `Se_axen_d9_1` | 216              | 9                 |
+| 2        | `Se_axen_d9_2` | 216              | 9                 |
+| 3        | `Se_axen_d9_3` | 216              | 9                 |
+
+
+
+
