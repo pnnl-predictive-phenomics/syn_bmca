@@ -116,4 +116,9 @@ As an example here is the breakdown of the 3 S. elongatus axenic control samples
 
 
 
+| Abbrev | Full    |
+|:------:|:-------:|
+| LacA   | lactate |
+| 2KG    | aKG     |
+|        |         |
 
