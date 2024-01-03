@@ -58,6 +58,23 @@ def _load_transcriptomics() -> pd.DataFrame:
     return df
 
 
+def _clean_metabolomics(metabolomics_df: pd.DataFrame) -> pd.DataFrame:
+    """Reduces the metabolomics data
+
+    We remove metabolomics data based on the criteria:
+    1. Unnamed metabolites from data
+    2. Time points of data that don't match transcriptomics data
+    """
+
+    
+    return reduced_metab_df
+
+
+def _clean_transcriptomics(transcriptomics_df: pd.DataFrame): -> pd.DataFrame:
+    """Reduces the transcriptomics data"""
+
+    return reduced_trans_df
+
 def main():
     """Returns a placeholder."""
     if UNZIPPED.exists():
