@@ -98,6 +98,10 @@ def _clean_metabolomics(metabolomics_df: pd.DataFrame, transcriptomics_timepts: 
     col_keep_idx = [(x in trans_to_metab_time_map.values()) for x in metab_col_timepts]
     metabolomics_df = metabolomics_df.iloc[:, col_keep_idx]
 
+    ## Keep only columns associated with the Syn_ax experiments (not co-cultures with Rt)
+    col_keep_idx = [x for x in metabolomics_df.columns.values if 'ax' in x]
+    metabolomics_df = metabolomics_df.loc[:, col_keep_idx]
+
    
     ## Rename rows using BIGG-IDs
     # Get KEGG_to_BIGG mapping
@@ -129,56 +133,38 @@ def _clean_metabolomics(metabolomics_df: pd.DataFrame, transcriptomics_timepts: 
     print(f"Missing IDs for {count_missing_IDs} metabolites. These rows will be removed for now")
     
     # Cleanup metabolics df by renaming index is KEGG and BIGG IDs are available, drop row otherwise
-    
-    print(metabolomics_df)
-    
-    print('---')
-    for k,v in exp_to_bigg_map.items():
-        print(k,v)
-
-    print('---')
-    # new_index = []
-    # for idx in metabolomics_df.index:
-    #     if idx in exp_to_bigg_map:
-    #         new_index.append(exp_to_bigg_map[idx])
-    #     else:
-    #         metabolomics_df.drop(idx)
-    
-    keep_row_map = {k:v for k,v in exp_to_bigg_map.items() if k in metabolomics_df.index}
-    print(keep_row_map)
-    print('---')
-    for idx in metabolomics_df.index:
-        if idx in keep_row_map:
-            print(idx, keep_row_map[idx])
-    print('---')
-    
-    print(metabolomics_df.index)
-    print('---')
-
-    keep_rows = [k for k in exp_to_bigg_map.keys() if k in metabolomics_df.index]
-    print("Keep rows")
-    print(keep_rows)
-
     metabolomics_df = metabolomics_df.loc[[k for k in exp_to_bigg_map.keys() if k in metabolomics_df.index]]
     metabolomics_df = metabolomics_df.rename(index=exp_to_bigg_map)
 
-
-
+    # Remove redundant metabolite names & keep first one only (bias preference to EMSL data vs JHU)
+    metab_idx = [i for i in metabolomics_df.index]
+    metab_idx_idx = np.arange(0,len(metab_idx))
+    remove_idx = []
+    for i,this_idx in enumerate(metab_idx):
+        match_idx = [x == this_idx for x in metab_idx]
+        if sum(match_idx)>1:
+            other_bad_idx = [x for x in metab_idx_idx[match_idx] if not(x==i)]
+            if all([i<x for x in other_bad_idx]):
+                remove_idx.extend(other_bad_idx)
+    print(f"Remove these indices: {remove_idx}")
+    print(f"Remove these rows-ids: {[metab_idx[i] for i in remove_idx]}")
+    metabolomics_df = metabolomics_df.drop([metab_idx[i] for i in remove_idx])
+    
     return metabolomics_df
 
 
 
-def _clean_transcriptomics(transcriptomics_df: pd.DataFrame, exp_prefix) -> pd.DataFrame:
+def _clean_transcriptomics(transcriptomics_df: pd.DataFrame) -> pd.DataFrame:
     """Reduces the transcriptomics data
 
     We remove transcriptomics data based on the criteria:
-    1. Remove rows with unknown transcript
+    1. Remove columns associated with the co-culture experiments that include Rt
     """
+    ## Keep only columns associated with the Syn_ax experiments (not co-cultures with Rt)
+    col_keep_idx = [x for x in transcriptomics_df.columns.values if 'ax' in x]
+    transcriptomics_df = transcriptomics_df.loc[:, col_keep_idx]
 
-    ## Remove rows with unknown transcript
-    
-
-    return reduced_trans_df
+    return transcriptomics_df
 
 def main():
     """Returns a placeholder."""
@@ -197,8 +183,8 @@ def main():
 
     print("Transcriptomics data:")
     print(transcriptomics)
-    
-    
+        
+    # Save preprocessed dataframes to file
     metabolomics.to_csv(OUTPUT.joinpath("metabolomics.csv"))
     transcriptomics.to_csv(OUTPUT.joinpath("transcriptomics.csv"))
 
@@ -210,9 +196,17 @@ def main():
 
     # Clean Metabolomics data
     reduced_metabolomics = _clean_metabolomics(metabolomics, transcript_timepts)
-    
     print("Reduced Metabolomics data:")
     print(reduced_metabolomics)
+
+    # Clean Transcriptomics data
+    reduced_transcriptomics = _clean_transcriptomics(transcriptomics)
+    print("Reduced Transcriptomics data:")
+    print(reduced_transcriptomics)
+
+    # Save cleaned dataframes to file
+    reduced_metabolomics.to_csv(OUTPUT.joinpath("cleaned_metabolomics.csv"))
+    reduced_transcriptomics.to_csv(OUTPUT.joinpath("cleaned_transcriptomics.csv"))
 
 if __name__ == "__main__":
     main()
