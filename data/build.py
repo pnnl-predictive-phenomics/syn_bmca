@@ -154,7 +154,7 @@ def _clean_metabolomics(metabolomics_df: pd.DataFrame, transcriptomics_timepts: 
 
 
 
-def _clean_transcriptomics(transcriptomics_df: pd.DataFrame) -> pd.DataFrame:
+def _clean_transcriptomics(transcriptomics_df: pd.DataFrame, new_col_names) -> pd.DataFrame:
     """Reduces the transcriptomics data
 
     We remove transcriptomics data based on the criteria:
@@ -164,6 +164,10 @@ def _clean_transcriptomics(transcriptomics_df: pd.DataFrame) -> pd.DataFrame:
     col_keep_idx = [x for x in transcriptomics_df.columns.values if 'ax' in x]
     transcriptomics_df = transcriptomics_df.loc[:, col_keep_idx]
 
+    ## Rename columns to be consistent with metabolomics data
+    column_map = dict(zip(transcriptomics_df.columns, new_col_names))
+    transcriptomics_df = transcriptomics_df.rename(columns=column_map)
+    
     return transcriptomics_df
 
 def main():
@@ -200,7 +204,7 @@ def main():
     print(reduced_metabolomics)
 
     # Clean Transcriptomics data
-    reduced_transcriptomics = _clean_transcriptomics(transcriptomics)
+    reduced_transcriptomics = _clean_transcriptomics(transcriptomics, new_col_names=reduced_metabolomics.columns)
     print("Reduced Transcriptomics data:")
     print(reduced_transcriptomics)
 
