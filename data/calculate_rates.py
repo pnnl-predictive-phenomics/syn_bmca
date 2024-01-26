@@ -18,11 +18,11 @@ OUTPUT = HERE.joinpath("processed_data")
 METAB = OUTPUT.joinpath("metabolomics.csv")
 RATES = OUTPUT.joinpath("calculated_metabolomic_abundance_rates.csv")
 
-def _load_metabolomics_data() -> pd.DataFrame:
+def load_metabolomics_data() -> pd.DataFrame:
     return pd.read_csv(METAB, index_col='Sample')
 
 
-def _calculate_rates(metab_df) -> pd.DataFrame:
+def calculate_rates(metab_df) -> pd.DataFrame:
     rates_df = pd.DataFrame(index=metab_df.index, columns=metab_df.columns)
 
     # Calculate rates for day 1: f(d2) - f(d1)
@@ -61,9 +61,9 @@ def _calculate_rates(metab_df) -> pd.DataFrame:
 
 def main():
     # Load metabolomics data
-    metabolomics_df = _load_metabolomics_data()
+    metabolomics_df = load_metabolomics_data()
     # calcualte rates
-    metab_rates_df = _calculate_rates(metabolomics_df)
+    metab_rates_df = calculate_rates(metabolomics_df)
 
     print(metab_rates_df)
 

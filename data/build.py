@@ -3,10 +3,13 @@
 import logging
 from pathlib import Path
 from zipfile import ZipFile
+import calculate_rates
 
 import pandas as pd
 import numpy as np
 import json
+
+
 
 HERE = Path(__file__).parent.resolve()
 RAW_DATA = HERE.joinpath("raw_data")
@@ -17,6 +20,7 @@ OUTPUT = HERE.joinpath("processed_data")
 METAB = UNZIPPED.joinpath("Metabolomics")
 TRANS = UNZIPPED.joinpath("Transcript")
 EXP_ID_MAP = METAB.joinpath("Metaboites_Se_Rt_IDs_9day.xlsx")
+RATES = OUTPUT.joinpath("calculated_metabolomic_abundance_rates.csv")
 
 
 logging.basicConfig(level=logging.INFO)
@@ -208,9 +212,19 @@ def main():
     print("Reduced Transcriptomics data:")
     print(reduced_transcriptomics)
 
+    # Generate and save metabolomic abundance rates (using original metabolomics data)
+    metab_rates = calculate_rates.calculate_rates(metabolomics)
+    metab_rates.to_csv(RATES)
+
+    # Clean rates data
+    reduced_metab_rates = _clean_metabolomics(metab_rates, transcript_timepts)
+
     # Save cleaned dataframes to file
     reduced_metabolomics.to_csv(OUTPUT.joinpath("cleaned_metabolomics.csv"))
     reduced_transcriptomics.to_csv(OUTPUT.joinpath("cleaned_transcriptomics.csv"))
+    reduced_metab_rates.to_csv(OUTPUT.joinpath("cleaned_metabolomic_abundance_rates.csv"))
+
+
 
 if __name__ == "__main__":
     main()
