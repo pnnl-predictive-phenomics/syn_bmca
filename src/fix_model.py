@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import cobra
+import numpy as np
 import pandas as pd
 
 """
@@ -18,7 +19,7 @@ ___________________________________________________
 
 HERE = Path(__file__).parent.resolve()
 ROOT = HERE.parent.resolve()
-MODEL = ROOT.joinpath("models/syn_elong.xml")
+MODEL = ROOT.joinpath("models/iJB785_w_sucrose_transport.xml")
 
 
 def calculate_fluxes(model: cobra.core.model.Model) -> pd.DataFrame:
@@ -29,28 +30,58 @@ def calculate_fluxes(model: cobra.core.model.Model) -> pd.DataFrame:
     return fluxes
 
 
-def drop_zero_fluxes(model: cobra.core.model.Model, fluxes: pd.DataFrame) -> cobra.core.model.Model:
-    """Drops zero fluxes from the model."""
+def drop_zero_fluxes(model, fluxes: pd.DataFrame) -> cobra.core.model.Model:
+    """Finds zero fluxes from the model."""
     zero_fluxes = fluxes[fluxes.any(axis=1) == 0].index.to_list()
     model.remove_reactions(zero_fluxes)
 
     return model
 
 
-def correct_negative_fluxes():
-    """Sets direction of reactions in model to flip negative."""
-    pass
+def flip_reaction(model: cobra.core.model.Model, reaction_id: str) -> None:
+    """Flips the reaction direction for a given model and reaction id."""
+    reaction = model.reactions.get_by_id(reaction_id)
+    if "<=>" in reaction.reaction:
+        left, right = reaction.reaction.split(" <=> ")
+        reaction.reaction = right + " <=> " + left
+    elif "-->" in reaction.reaction:
+        left, right = reaction.reaction.split(" --> ")
+        reaction.reaction = right + " <-- " + left
+    elif "<--" in reaction.reaction:
+        left, right = reaction.reaction.split(" <-- ")
+        reaction.reaction = right + " --> " + left
+
+    model.repair()
+    reaction.upper_bound = max(np.abs(reaction.lower_bound), reaction.upper_bound)
+    reaction.lower_bound = 0
+    reaction.update_variable_bounds()
 
 
-def main():
+# def create_slack_variables(model: cobra.core.model.Model, reactions: list[str]):
+#     """Creates slack variables and adds them to objective."""
+#     for reaction in reactions:
+#         rxn = model.reactions.get_by_id(reaction)
+#         slack_var = model.problem.Variable(f"{rxn.id}_slack", lb=0)
+#         model.add_cons_vars(slack_var)
+
+#         constraint = model.problem.Constraint(
+#             rxn.flux_expression - slack_var,
+#             ub=0,
+#         )
+#         model.add_cons_vars(constraint)
+#     return model
+
+
+def main() -> None:
     """Runs script."""
     model = cobra.io.read_sbml_model(MODEL)
     fluxes = calculate_fluxes(model)
     model = drop_zero_fluxes(model, fluxes)
+    # model = create_slack_variables(model=model, reactions=fluxes)
     new_fluxes = calculate_fluxes(model)
-
-    return new_fluxes
+    cobra.io.write_sbml_model(model, ROOT / "models/iJB785_no_zero_flux.xml")
+    new_fluxes.to_csv("v_star_iJB785.csv")
 
 
 if __name__ == "__main__":
-    new_fluxes = main()
+    main()
