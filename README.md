@@ -5,13 +5,14 @@ A repository for hosting the data and code for Synechococcus elongatus using Bay
 ```mermaid
 flowchart TD
  subgraph Legend[<h2> Legend </h2>]
+ direction LR
         UserData["User \n Provided \n Data"]
         CompData["Computed \n Data"]
         Action(("Action/ \n Process"))
         Choice{"Choice"}
   end
 
- subgraph ObservedData[<h2> Observed Data And Pre-processing </h2>]
+ subgraph ObservedData[<h2> Observed Data \n and Pre-processing </h2>]
         Data["Observed \n Data"]
         TranscData["Transcriptomics"]
         ExMetab["External \n Metabolites"]
@@ -21,7 +22,7 @@ flowchart TD
         EnzAct["Enzyme Activity"]
   end
 
- subgraph CobraModel[<h2> Cobra Model and Pre-processing </h2>]
+ subgraph CobraModel[<h2> Cobra Model and \n Pre-processing </h2>]
         FVA(("FVA"))
         ElastMat["Elasticity \n Matrices"]
         StoichMat["Stoichiometric \n Matrix"]
@@ -37,16 +38,15 @@ flowchart TD
         CondCompFluxes["Conditional \n Computed Fluxes"]
   end
 
- subgraph PyMC[<h2> PyMC Model Build </h2>]
-        direction LR
+ subgraph PyMC[<h2> PyMC Model \n Build </h2>]
         StartPyMC(("Start"))
         ChckObsFlux{"Use \n Data-Conditioned \n Fluxes?"}
         GetInputsBasic(("Collect \n Minimal \n Inputs"))
         CreatePyMC(("Generate \n PyMC Model"))
         GetInputsData(("Collect \n Data-informed \n Inputs"))
   end
-  
- subgraph Bayes[<h2> Bayesian Analysis </h2>]
+
+ subgraph Bayes[<h2> Bayesian \n Analysis </h2>]
         RunInf(("Run \n Inference"))
         Priors["Prior \n FCCs"]
         Post["Posterior \n FCCs"]
@@ -60,7 +60,6 @@ flowchart TD
 
     %% Cobra Model Links
     OrigCobra --> FVA & ElastMat & Optimize & FBA
-    RxnConstr --> FVA
     FVA --> FluxBounds
     FluxBounds --> RefCobra
     Optimize --> UncondCompFlux --> RefStFlux
@@ -82,7 +81,8 @@ flowchart TD
     GetInputsData --> CreatePyMC
 
     %% Inter-subgraph Links
-    EnzAct --> Eflux
+    RxnConstr --> FVA
+    CalcExFlux & EnzAct --> Eflux
     CreatePyMC --> RunInf & Priors
     RunInf --> Post
     Priors --> Viz
