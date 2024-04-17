@@ -42,7 +42,6 @@ class SynBMCA:
         self.ref_state = reference_state
         self.preprocess_data()
         self.build_pymc_model()
-        # breakpoint()
         self.approx, self.hist = self.run_emll()
         self.save_results(self.approx, self.hist)
 
@@ -181,7 +180,7 @@ class SynBMCA:
         with self.pymc_model:
             approx = pm.ADVI()
             hist = approx.fit(
-                n=40000,
+                n=80000,
                 obj_optimizer=pm.adagrad_window(learning_rate=0.005),
                 total_grad_norm_constraint=100,
             )
@@ -193,9 +192,10 @@ class SynBMCA:
 
     def save_results(self, approx, hist):
         """Save ADVI results in cloudpickle."""
-        with gzip.open("data/{self.model.name}.pgz", "wb") as f:
+        with gzip.open("Syn_80k.pgz", "wb") as f:
             cloudpickle.dump(
                 {
+                    "model": self.pymc_model,
                     "approx": approx,
                     "hist": hist,
                 },
@@ -205,7 +205,7 @@ class SynBMCA:
 
 def main():
     """Run SynBMCA for default case."""
-    ref_state = "Se_axen_d6_1"
+    ref_state = "Se_axen_d8_3"
 
     SynBMCA(
         MODEL,
