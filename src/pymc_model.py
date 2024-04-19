@@ -30,6 +30,7 @@ class SynBMCA:
         metabolite_concentrations_path,
         enzyme_measurements_path,
         reference_state,
+        run_inference=True,
         # boundary_fluxes_path,
     ):
         """Placeholder Docstring."""
@@ -42,8 +43,11 @@ class SynBMCA:
         self.ref_state = reference_state
         self.preprocess_data()
         self.build_pymc_model()
-        self.approx, self.hist = self.run_emll()
-        self.save_results(self.approx, self.hist)
+
+        # If only building PyMC model, set run_inference to False
+        if self.run_inference:
+            self.approx, self.hist = self.run_emll()
+            self.save_results(self.approx, self.hist)
 
     def preprocess_data(self):
         """Read in cobra model as components."""
@@ -190,6 +194,19 @@ class SynBMCA:
 
         return approx, hist
 
+    def save_model_data(self):
+        """Save model input data and pymc model."""
+        with gzip.open("Model_Data.pgz", "wb") as f:
+            cloudpickle.dump(
+                {
+                    "model": self.pymc_model,
+                    "cobra": self.model,
+                    "xn": self.xn,
+                    "en": self.en,
+                },
+                f,
+            )
+
     def save_results(self, approx, hist):
         """Save ADVI results in cloudpickle."""
         with gzip.open("Syn_80k.pgz", "wb") as f:
@@ -213,6 +230,7 @@ def main():
         METAB,
         PROT,
         ref_state,
+        run_inference=False,
     )
 
 
