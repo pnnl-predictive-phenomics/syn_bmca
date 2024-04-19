@@ -34,7 +34,7 @@ class SynBMCA:
         # boundary_fluxes_path,
     ):
         """Placeholder Docstring."""
-        self.model = cobra.io.read_sbml_model(model_path)
+        self.model =cobra.io.read_sbml_model(model_path)
         self.v_star = pd.read_csv(v_star_path, header=None, index_col=0)[1]
         self.x = pd.read_csv(metabolite_concentrations_path, index_col=0)
         # self.v = pd.read_csv(boundary_fluxes_path, index_col=0)
@@ -43,6 +43,7 @@ class SynBMCA:
         self.ref_state = reference_state
         self.preprocess_data()
         self.build_pymc_model()
+        self.save_pymc_data()
 
         # If only building PyMC model, set run_inference to False
         if self.run_inference:
@@ -218,6 +219,24 @@ class SynBMCA:
                 },
                 f,
             )
+
+    def save_pymc_data(self, fname='Syn_pymcmodel_data.pgz'):
+        """Save PYMC model and info in cloudpickle."""
+        with gzip.open(fname, 'wb') as f:
+            cloudpickle.dump({
+                'model': self.pymc_model,
+                # 'vn': self.vn, # vn not used for this run of S.elongatus
+                'en': self.en,
+                # 'yn_t': self.yn_t,
+                'xn': self.xn,
+                'x_inds': self.x_inds,
+                'e_inds': self.e_inds,
+                # 'v_inds': self.v_inds,
+                #'m_labels': m_labels,
+                # 'r_labels': self.r_labels,
+                'll': self.ll,
+                'v_star': self.v_star
+            }, f)
 
 
 def main():
