@@ -122,3 +122,24 @@ def convert_transcriptomics_to_enzyme_activity(transcriptomics_data: pd.DataFram
         enzyme_activity_df[this_strain] = enzyme_activity_dict
 
     return enzyme_activity_df
+
+def prepare_data_for_bmca(all_conditions: list, measured_data: pd.DataFrame,  unmeasured_variables: list = list(), unmapped_variables: list= list()) -> pd.DataFrame:
+    """prepare_data_for_bmca.
+    all_conditions:  the full set of experimental conditions for which data is available.
+    measured_data: a DataFrame that contains measurements of variables in at least one experimental condition.  rows are variable names and columns are experimental conditions.
+    unmapped_variables: a list of variables (metabolite_ids or reaction ids) that is unobservable and therefore cannot be mapped to data. (exchange reactions that have no enzyme)
+    unmeasured_variables: a list of variable (metabolite_ids or reaction ids) that are not measured in any condition
+    """
+    # Get the set of all variables
+    all_variables = sorted(set(measured_data.index).union(set(unmeasured_variables)).union(set(unmapped_variables)))
+    # Get the set of all conditions
+    all_conditions = sorted(set(all_conditions))
+    # Create a DataFrame to hold the data
+    data = pd.DataFrame(np.Inf, index=all_variables, columns=all_conditions)
+    # Fill in the measured data
+    data.loc[measured_data.index, measured_data.columns] = measured_data
+    # Fill in the unmeasured data
+    data.loc[unmeasured_variables, :] = np.Inf
+    # Fill in  unmapped data
+    data.loc[unmapped_variables, :] = np.nan
+    return data
