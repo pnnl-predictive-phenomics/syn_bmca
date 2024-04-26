@@ -65,21 +65,24 @@ def gene_expression_to_enzyme_activity(model, gpr: dict[Reaction, list[list[Gene
     """
     enzyme_activity = {}
     for rxn in model.reactions:
-      # Initialize enzyme_activity for this reaction to 0-value
-      # Note: 0-value preserved IF this reaction doesn't have any genes in its gene reaction rule
-      # Obvious example: Exchange/transport reactions don't have corresponding genes in their reaction rule, so the 0-value is preserved
-      enzyme_activity[rxn] = 0.0
+        # Initialize enzyme_activity for this reaction to 0-value
+        # Note: Converted to NaN-value IF this reaction doesn't have any genes in its gene reaction rule
+        # Obvious example: Exchange/transport reactions don't have corresponding genes in their reaction rule, so that will take a NaN-value
+        enzyme_activity[rxn] = 0.0
 
-      if rxn in gpr: # ensure rxn has a gene_reaction_rule defined
-        for isozyme in gpr[rxn]:
-          # Initialize isozyme_activity for this isozyme to infinity
-          # Note: infinity-value is preserved IF this isozyme is not present in the observed transcriptomics data
-          isozyme_activity = np.inf
-          for gene in isozyme:
-            # ensure gene in the isozyme is included in observed data
-            if gene in expression:
-              isozyme_activity = np.min([isozyme_activity, expression[gene]])
-          enzyme_activity[rxn] += isozyme_activity
+        if rxn in gpr: # ensure rxn has a gene_reaction_rule defined
+            for isozyme in gpr[rxn]:
+                # Initialize isozyme_activity for this isozyme to infinity
+                # Note: infinity-value is preserved IF this isozyme is not present in the observed transcriptomics data
+                isozyme_activity = np.inf
+                for gene in isozyme:
+                    # ensure gene in the isozyme is included in observed data
+                    if gene in expression:
+                        isozyme_activity = np.min([isozyme_activity, expression[gene]])
+                enzyme_activity[rxn] += isozyme_activity
+        else:
+            enzyme_activity[rxn] = np.nan
+
     return enzyme_activity
 
 
