@@ -19,7 +19,7 @@ ___________________________________________________
 
 HERE = Path(__file__).parent.resolve()
 ROOT = HERE.parent.resolve()
-MODEL = ROOT.joinpath("models/iJB785_w_sucrose_transport.xml")
+MODEL = ROOT.joinpath("models/syn_elong.xml")
 
 
 def calculate_fluxes(model: cobra.core.model.Model) -> pd.DataFrame:
@@ -38,23 +38,37 @@ def drop_zero_fluxes(model, fluxes: pd.DataFrame) -> cobra.core.model.Model:
     return model
 
 
-def flip_reaction(model: cobra.core.model.Model, reaction_id: str) -> None:
-    """Flips the reaction direction for a given model and reaction id."""
-    reaction = model.reactions.get_by_id(reaction_id)
-    if "<=>" in reaction.reaction:
-        left, right = reaction.reaction.split(" <=> ")
-        reaction.reaction = right + " <=> " + left
-    elif "-->" in reaction.reaction:
-        left, right = reaction.reaction.split(" --> ")
-        reaction.reaction = right + " <-- " + left
-    elif "<--" in reaction.reaction:
-        left, right = reaction.reaction.split(" <-- ")
-        reaction.reaction = right + " --> " + left
+# def flip_reaction(model: cobra.core.model.Model, reaction_id: str) -> None:
+#     """Flips the reaction direction for a given model and reaction id."""
+#     reaction = model.reactions.get_by_id(reaction_id)
+#     if "<=>" in reaction.reaction:
+#         left, right = reaction.reaction.split(" <=> ")
+#         reaction.reaction = right + " <=> " + left
+#     elif "-->" in reaction.reaction:
+#         left, right = reaction.reaction.split(" --> ")
+#         reaction.reaction = right + " <-- " + left
+#     elif "<--" in reaction.reaction:
+#         left, right = reaction.reaction.split(" <-- ")
+#         reaction.reaction = right + " --> " + left
 
-    model.repair()
-    reaction.upper_bound = max(np.abs(reaction.lower_bound), reaction.upper_bound)
+#     model.repair()
+#     reaction.upper_bound = max(np.abs(reaction.lower_bound), reaction.upper_bound)
+#     reaction.lower_bound = 0
+#     reaction.update_variable_bounds()
+
+
+def flip_reaction(model: cobra.core.model.Model, reaction_id: str) -> cobra.core.reaction.Reaction:
+    """Flips the reaction direction for a given model and reaction id."""
+    unflipped_reaction = model.reactions.get_by_id(reaction_id)
+    reaction = unflipped_reaction.copy()
     reaction.lower_bound = 0
-    reaction.update_variable_bounds()
+    reaction.upper_bound = abs(unflipped_reaction.lower_bound)
+
+    metabolites = {met: -2 * stoich for met, stoich in reaction.metabolites.items()}
+
+    reaction.add_metabolites(metabolites)
+
+    return reaction
 
 
 # def create_slack_variables(model: cobra.core.model.Model, reactions: list[str]):
@@ -79,8 +93,8 @@ def main() -> None:
     model = drop_zero_fluxes(model, fluxes)
     # model = create_slack_variables(model=model, reactions=fluxes)
     new_fluxes = calculate_fluxes(model)
-    cobra.io.write_sbml_model(model, ROOT / "models/iJB785_no_zero_flux.xml")
-    new_fluxes.to_csv("v_star_iJB785.csv")
+    cobra.io.write_sbml_model(model, ROOT / "models/syn_elong_no_zero_flux.xml")
+    new_fluxes.to_csv("v_star_syn_elong.csv")
 
 
 if __name__ == "__main__":
