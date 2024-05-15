@@ -130,6 +130,31 @@ def convert_transcriptomics_to_enzyme_activity(
 
     return enzyme_activity_df.set_index("Reaction_ID")
 
+def convert_metabolomics_to_fluxes(metabolomics_data: pd.DataFrame, prev_next_steps: pd.DataFrame) -> pd.DataFrame:
+    """Calcualte fluxes from time series metabolomics data.
+
+    inputs:
+        metabolomics_data: dataframe containing observed time series metabolomics data, with metabolite IDs as rownames, and experimental conditions as column names
+        prev_next_and_time_steps: dataframe with row names equal to the column names of metabolomics_data, column names equal to ["Prev", "Next", "delta_t"], 
+                                    and entries equal to column names of metabolomics_data for "Prev" and "Next" to represent the previous and next values respectively
+                                    used in the numerator of the derivative calculation, and floats for "delta_t" as the time duration in the denominator.
+    outputs:
+        flux_df: dataframe of flux values with the same column and row names as metabolomics_data
+    """
+    # Check that prev_next_steps is a dataframe with column names =["Prev","Next","delta_t"]
+    if not all(c in prev_next_steps.columns for c in ["Prev", "Next", "delta_t"]):
+        raise AttributeError('["Prev", "Next", "delta_t"] must be column names of prev_next_steps')
+    # Check that entries of "Prev" and "Next" columns of prev_next_steps are column names of metabolomics_data or NaN
+    if not all(((x in metabolomics_data.columns) or (np.isnan(x))) for c in ["Prev", "Next"] for x in prev_next_steps[c]):
+        raise ValueError("Entries of 'Prev' and 'Next' columns of prev_next_steps must be column names of metabolomics_data")
+    # Check that entries of "delta_t" column of prev_next_steps are floats
+    if not all(isinstance(t, float) for t in prev_next_steps["delta_t"]):
+        raise TypeError("Entries of 'delta_t' column of prev_next_steps must be floats")
+
+    flux_df = pd.DataFrame().reindex_like(metabolomics_data)
+
+    return flux_df
+
 
 # TODO: This function and its corresponding unit test should be reviewed/rewritten.
 def prepare_data_for_bmca(all_conditions: list, measured_data: pd.DataFrame,  unmeasured_variables: list = list(), unmapped_variables: list= list()) -> pd.DataFrame:
