@@ -4,10 +4,12 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
 from cobra.core.model import Model
 
 sys.path.append('src/')
 from bmca_utils import (
+    convert_metabolomics_to_fluxes,
     convert_transcriptomics_to_enzyme_activity,
     gene_expression_to_enzyme_activity,
     get_gpr_dict,
@@ -138,6 +140,38 @@ def test_convert_transcriptomics_to_enzyme_activity(
     assert result.equals(expected_enzyme_activity)
 
 
+def test_convert_metabolomics_to_fluxes(
+        metabolomics_data_ab,  # metabolomics_data_cd,
+        prev_next_steps_ab_df,  # prev_next_steps_cd_df,
+        delta_t_ab,  # delta_t_cd,
+        expected_flux_ab_df,  # expected_flux_cd_df
+        ):
+    """Test convert_metabolomics_to_fluxes function in bmca_utils.py."""
+    # Missing columns in prev_next_steps test
+    this_prev_next_steps = pd.DataFrame(prev_next_steps_ab_df['Prev'])
+    with pytest.raises(AttributeError):
+        convert_metabolomics_to_fluxes(metabolomics_data_ab, this_prev_next_steps, delta_t_ab)
+
+    # Entries in "Prev" or "Next" columns not in metabolomics_data test
+    this_prev_next_steps = prev_next_steps_ab_df.copy()
+    this_prev_next_steps['Next'][0] = 'C'
+    with pytest.raises(ValueError):
+        convert_metabolomics_to_fluxes(metabolomics_data_ab, this_prev_next_steps, delta_t_ab)
+
+    # Valid input data test with constant delta_t timesetep values
+    result = convert_metabolomics_to_fluxes(metabolomics_data_ab, prev_next_steps_ab_df, delta_t_ab)
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == metabolomics_data_ab.shape
+    assert result.equals(expected_flux_ab_df)
+
+    # # Valid input data test with different delta_t timesetep values
+    # result = convert_metabolomics_to_fluxes(metabolomics_data_cd, prev_next_steps_cd_df)
+    # assert isinstance(result, pd.DataFrame)
+    # assert result.shape == metabolomics_data_cd.shape
+    # assert result.equals(expected_flux_cd_df)
+
+
+
 def test_prepare_data_for_bmca():
     """Test prepare_data_for_bmca function in bmca_utils.py."""
     # Initialize test data
@@ -161,4 +195,4 @@ def test_prepare_data_for_bmca():
 
     # Compare
     assert result.equals(expected_result)
-     
+

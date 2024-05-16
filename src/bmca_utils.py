@@ -130,34 +130,43 @@ def convert_transcriptomics_to_enzyme_activity(
 
     return enzyme_activity_df.set_index("Reaction_ID")
 
-def convert_metabolomics_to_fluxes(metabolomics_data: pd.DataFrame, prev_next_steps: pd.DataFrame) -> pd.DataFrame:
-    """Calcualte fluxes from time series metabolomics data.
+def convert_metabolomics_to_fluxes(metabolomics_data: pd.DataFrame, prev_next_steps: pd.DataFrame, delta_t: float) -> pd.DataFrame:
+    """Calculate fluxes from time series metabolomics data.
+
+    Assumption: the time series is monotonic with constant time step, delta_t (may consider non-monotonic time series later)
 
     inputs:
         metabolomics_data: dataframe containing observed time series metabolomics data, with metabolite IDs as rownames, and experimental conditions as column names
-        prev_next_and_time_steps: dataframe with row names equal to the column names of metabolomics_data, column names equal to ["Prev", "Next", "delta_t"], 
-                                    and entries equal to column names of metabolomics_data for "Prev" and "Next" to represent the previous and next values respectively
-                                    used in the numerator of the derivative calculation, and floats for "delta_t" as the time duration in the denominator.
+        prev_next_and_time_steps: dataframe with row names equal to the column names of metabolomics_data, column names equal to ["Prev", "Next"],
+                                  and entries equal to column names of metabolomics_data for "Prev" and "Next" to represent the previous and next values respectively
+                                  to be used in the numerator of the derivative calculation
+        delta_t: time step of the time series
     outputs:
         flux_df: dataframe of flux values with the same column and row names as metabolomics_data
     """
-    # Check that prev_next_steps is a dataframe with column names =["Prev","Next","delta_t"]
-    if not all(c in prev_next_steps.columns for c in ["Prev", "Next", "delta_t"]):
-        raise AttributeError('["Prev", "Next", "delta_t"] must be column names of prev_next_steps')
+    # Check that prev_next_steps is a dataframe with column names =["Prev","Next"]
+    if not all(c in prev_next_steps.columns for c in ["Prev", "Next"]):
+        raise AttributeError('["Prev", "Next"] must be column names of prev_next_steps')
     # Check that entries of "Prev" and "Next" columns of prev_next_steps are column names of metabolomics_data or NaN
-    if not all(((x in metabolomics_data.columns) or (np.isnan(x))) for c in ["Prev", "Next"] for x in prev_next_steps[c]):
-        raise ValueError("Entries of 'Prev' and 'Next' columns of prev_next_steps must be column names of metabolomics_data")
-    # Check that entries of "delta_t" column of prev_next_steps are floats
-    if not all(isinstance(t, float) for t in prev_next_steps["delta_t"]):
-        raise TypeError("Entries of 'delta_t' column of prev_next_steps must be floats")
+    if not all((x in metabolomics_data.columns) for c in prev_next_steps.columns for x in prev_next_steps[c]):
+        raise ValueError("Entries of prev_next_steps must be column names of metabolomics_data")
 
+    # Initialize empty dataframe with same column and row names as metabolomics_data
     flux_df = pd.DataFrame().reindex_like(metabolomics_data)
+
+    # Calculate fluxes
+    for this_col in flux_df.columns:
+        if (this_col == prev_next_steps["Prev"][this_col]) or (this_col == prev_next_steps["Next"][this_col]):
+            denom = delta_t
+        else:
+            denom = 2.0*delta_t
+        flux_df[this_col] = (metabolomics_data[prev_next_steps["Next"][this_col]] - metabolomics_data[prev_next_steps["Prev"][this_col]]) / denom
 
     return flux_df
 
 
 # TODO: This function and its corresponding unit test should be reviewed/rewritten.
-def prepare_data_for_bmca(all_conditions: list, measured_data: pd.DataFrame,  unmeasured_variables: list = list(), unmapped_variables: list= list()) -> pd.DataFrame:
+def prepare_data_for_bmca(all_conditions: list, measured_data: pd.DataFrame,  unmeasured_variables: list, unmapped_variables: list= list()) -> pd.DataFrame:
     """prepare_data_for_bmca.
 
     all_conditions:  the full set of experimental conditions for which data is available.
