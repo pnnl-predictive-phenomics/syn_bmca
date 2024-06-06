@@ -1,15 +1,13 @@
 """File to process Omics data collected for Synechococcus elongatus."""
 
+import json
 import logging
 from pathlib import Path
 from zipfile import ZipFile
+
 import calculate_rates
-
-import pandas as pd
 import numpy as np
-import json
-
-
+import pandas as pd
 
 HERE = Path(__file__).parent.resolve()
 AXENIC = HERE.joinpath("axenic_experiments")
@@ -67,6 +65,7 @@ def _load_transcriptomics() -> pd.DataFrame:
     logging.info("Loaded Transcriptomics Data")
     return df
 
+
 # Function to extract time points from Transcriptomics data
 def _extract_timepoints(this_df: pd.DataFrame) -> list:
     """Extracts the time points from the dataframe columsn
@@ -91,28 +90,26 @@ def _clean_metabolomics(metabolomics_df: pd.DataFrame, transcriptomics_timepts: 
     1. Rename rows using BIGG-IDs
     2. Rename transctiptomics columns to match metabolomics column names that are kept [done in `_clean_transciptomics()` function]
     """
-    
-    ## Remove columns that don't match transcriptomics data time points 
+    # Remove columns that don't match transcriptomics data time points
     # Get time points in hours from metabolomics data column names
-    metab_col_timepts = [24.0*int(cn.split("_")[-2][1]) for cn in list(metabolomics_df.columns.values)]
+    metab_col_timepts = [24.0 * int(cn.split("_")[-2][1]) for cn in list(metabolomics_df.columns.values)]
 
     # Create mapping between transcriptomics time points and the closest metabolomics time points
-    trans_to_metab_time_map = dict(zip(transcriptomics_timepts, [min(metab_col_timepts, key=lambda x:abs(x-y)) for y in transcriptomics_timepts]))
+    trans_to_metab_time_map = dict(zip(transcriptomics_timepts, [min(metab_col_timepts, key=lambda x:abs(x - y)) for y in transcriptomics_timepts]))
 
     # Keep metabolomics data columns closest to transcriptomics time points
     col_keep_idx = [(x in trans_to_metab_time_map.values()) for x in metab_col_timepts]
     metabolomics_df = metabolomics_df.iloc[:, col_keep_idx]
 
-    ## Keep only columns associated with the Syn_ax experiments (not co-cultures with Rt)
+    # Keep only columns associated with the Syn_ax experiments (not co-cultures with Rt)
     col_keep_idx = [x for x in metabolomics_df.columns.values if 'ax' in x]
     metabolomics_df = metabolomics_df.loc[:, col_keep_idx]
 
-   
-    ## Rename rows using BIGG-IDs
+    # Rename rows using BIGG-IDs
     # Get KEGG_to_BIGG mapping
     with open(KEGG_TO_BIGG_MAP) as f:
         kegg_to_bigg_map = json.load(f)
-    
+
     # Create mapping from short names in experiment to BIGG IDs
     exp_map = pd.read_excel(EXP_ID_MAP, skiprows=1, header=0, index_col=0)
 
@@ -120,43 +117,42 @@ def _clean_metabolomics(metabolomics_df: pd.DataFrame, transcriptomics_timepts: 
     count_missing_IDs = 0
     for idx in exp_map.index:
         # Only include known metabolites with higher certainty
-        if not('*' in idx) and not('unk-' in idx):
-            kid = exp_map.loc[idx,'Kegg']
-            bid = exp_map.loc[idx,'BiGG']
+        if '*' not in idx and 'unk-' not in idx:
+            kid = exp_map.loc[idx, 'Kegg']
+            bid = exp_map.loc[idx, 'BiGG']
             # shortname = exp_map.loc[idx,'Abbr name']
-            if not(kid=='' or pd.isna(kid)):
+            if not (kid == '' or pd.isna(kid)):
                 if kid in kegg_to_bigg_map:
                     # exp_to_bigg_map[shortname] = kegg_to_bigg_map[kid]
                     exp_to_bigg_map[idx] = kegg_to_bigg_map[kid]
-                elif not(bid=='' or pd.isna(bid)):
+                elif not (bid == '' or pd.isna(bid)):
                     # exp_to_bigg_map[shortname] = bid
                     exp_to_bigg_map[idx] = bid
                 else:
                     print(f"{kid} not found in any mappings")
-                    count_missing_IDs+=1
-    
+                    count_missing_IDs += 1
+
     print(f"Missing IDs for {count_missing_IDs} metabolites. These rows will be removed for now")
-    
+
     # Cleanup metabolics df by renaming index is KEGG and BIGG IDs are available, drop row otherwise
-    metabolomics_df = metabolomics_df.loc[[k for k in exp_to_bigg_map.keys() if k in metabolomics_df.index]]
+    metabolomics_df = metabolomics_df.loc[[k for k in exp_to_bigg_map if k in metabolomics_df.index]]
     metabolomics_df = metabolomics_df.rename(index=exp_to_bigg_map)
 
     # Remove redundant metabolite names & keep first one only (bias preference to EMSL data vs JHU)
     metab_idx = [i for i in metabolomics_df.index]
-    metab_idx_idx = np.arange(0,len(metab_idx))
+    metab_idx_idx = np.arange(0, len(metab_idx))
     remove_idx = []
-    for i,this_idx in enumerate(metab_idx):
+    for i, this_idx in enumerate(metab_idx):
         match_idx = [x == this_idx for x in metab_idx]
-        if sum(match_idx)>1:
-            other_bad_idx = [x for x in metab_idx_idx[match_idx] if not(x==i)]
-            if all([i<x for x in other_bad_idx]):
+        if sum(match_idx) > 1:
+            other_bad_idx = [x for x in metab_idx_idx[match_idx] if x != i]
+            if all([i < x for x in other_bad_idx]):
                 remove_idx.extend(other_bad_idx)
     print(f"Remove these indices: {remove_idx}")
     print(f"Remove these rows-ids: {[metab_idx[i] for i in remove_idx]}")
     metabolomics_df = metabolomics_df.drop([metab_idx[i] for i in remove_idx])
-    
-    return metabolomics_df
 
+    return metabolomics_df
 
 
 def _clean_transcriptomics(transcriptomics_df: pd.DataFrame, new_col_names) -> pd.DataFrame:
@@ -165,15 +161,16 @@ def _clean_transcriptomics(transcriptomics_df: pd.DataFrame, new_col_names) -> p
     We remove transcriptomics data based on the criteria:
     1. Remove columns associated with the co-culture experiments that include Rt
     """
-    ## Keep only columns associated with the Syn_ax experiments (not co-cultures with Rt)
+    # Keep only columns associated with the Syn_ax experiments (not co-cultures with Rt)
     col_keep_idx = [x for x in transcriptomics_df.columns.values if 'ax' in x]
     transcriptomics_df = transcriptomics_df.loc[:, col_keep_idx]
 
-    ## Rename columns to be consistent with metabolomics data
+    # Rename columns to be consistent with metabolomics data
     column_map = dict(zip(transcriptomics_df.columns, new_col_names))
     transcriptomics_df = transcriptomics_df.rename(columns=column_map)
-    
+
     return transcriptomics_df
+
 
 def main():
     """Returns a placeholder."""
@@ -192,7 +189,7 @@ def main():
 
     print("Transcriptomics data:")
     print(transcriptomics)
-        
+
     # Save preprocessed dataframes to file
     metabolomics.to_csv(OUTPUT.joinpath("metabolomics.csv"))
     transcriptomics.to_csv(OUTPUT.joinpath("transcriptomics.csv"))
@@ -224,7 +221,6 @@ def main():
     reduced_metabolomics.to_csv(OUTPUT.joinpath("cleaned_metabolomics.csv"))
     reduced_transcriptomics.to_csv(OUTPUT.joinpath("cleaned_transcriptomics.csv"))
     reduced_metab_rates.to_csv(OUTPUT.joinpath("cleaned_metabolomic_abundance_rates.csv"))
-
 
 
 if __name__ == "__main__":
