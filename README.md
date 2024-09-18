@@ -6,51 +6,51 @@ A repository for hosting the data and code for Synechococcus elongatus using Bay
 flowchart TD
  subgraph Legend[<h2> Legend </h2>]
  direction LR
-        UserData["User \n Provided \n Data"]
-        CompData["Computed \n Data"]
-        Action(("Action/ \n Process"))
+        UserData["User Provided Data"]
+        CompData["Computed Data"]
+        Action(("Action/Process"))
         Choice{"Choice"}
   end
 
- subgraph ObservedData[<h2> Observed Data \n and Pre-processing </h2>]
-        Data["Observed \n Data"]
+ subgraph ObservedData[<h2> Observed Data and Pre-processing </h2>]
+        Data["Observed Data"]
         TranscData["Transcriptomics"]
-        ExMetab["External \n Metabolites"]
-        RxnConstr["Reactions of Interest \n & Objectives"]
-        RefSt["Reference \n State"]
-        CalcExFlux["Calculated \n External \n Fluxes"]
+        ExMetab["External Metabolites"]
+        RxnConstr["Reactions of Interest & Objectives"]
+        RefSt["Reference State"]
+        CalcExFlux["Calculated External Fluxes"]
         EnzAct["Enzyme Activity"]
   end
 
- subgraph CobraModel[<h2> Cobra Model and \n Pre-processing </h2>]
+ subgraph CobraModel[<h2> Cobra Model and Pre-processing </h2>]
         FVA(("FVA"))
-        ElastMat["Elasticity \n Matrices"]
-        StoichMat["Stoichiometric \n Matrix"]
+        ElastMat["Elasticity Matrices"]
+        StoichMat["Stoichiometric Matrix"]
         Optimize(("Optimize"))
         FBA(("FBA"))
         OrigCobra["Cobra Model"]
         FluxBounds["Flux Bounds"]
-        RefCobra["Data-Conditional \n Cobra Model"]
-        UncondCompFlux["Unconditional \n Computed Fluxes"]
-        RefStFlux["Reference Strain \n Fluxes"]
-        DelZeroFlux(("Delete \n 0-Flux \n Reactions"))
+        RefCobra["Data-Conditional Cobra Model"]
+        UncondCompFlux["Unconditional Computed Fluxes"]
+        RefStFlux["Reference Strain Fluxes"]
+        DelZeroFlux(("Delete 0-Flux Reactions"))
         Eflux(("Eflux2"))
-        CondCompFluxes["Conditional \n Computed Fluxes"]
+        CondCompFluxes["Conditional Computed Fluxes"]
   end
 
- subgraph PyMC[<h2> PyMC Model \n Build </h2>]
+ subgraph PyMC[<h2> PyMC Model Build </h2>]
         StartPyMC(("Start"))
-        ChckObsFlux{"Use \n Data-Conditioned \n Fluxes?"}
-        GetInputsBasic(("Collect \n Minimal \n Inputs"))
-        CreatePyMC(("Generate \n PyMC Model"))
-        GetInputsData(("Collect \n Data-informed \n Inputs"))
+        ChckObsFlux{"Use Data-Conditioned Fluxes?"}
+        GetInputsBasic(("Collect Minimal Inputs"))
+        CreatePyMC(("Generate PyMC Model"))
+        GetInputsData(("Collect Data-informed Inputs"))
   end
 
- subgraph Bayes[<h2> Bayesian \n Analysis </h2>]
-        RunInf(("Run \n Inference"))
-        Priors["Prior \n FCCs"]
-        Post["Posterior \n FCCs"]
-        Viz["Visualization \n and \n Comparisons"]
+ subgraph Bayes[<h2> Bayesian Analysis </h2>]
+        RunInf(("Run Inference"))
+        Priors["Prior FCCs"]
+        Post["Posterior FCCs"]
+        Viz["Visualization and Comparisons"]
   end
     
     %% Data Links
